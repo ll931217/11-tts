@@ -1,0 +1,5 @@
+{
+  "main": "11-tts-out.js",
+  "output": "sea-prep.blob",
+  "preload": "preload.js"
+}

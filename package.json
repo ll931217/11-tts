@@ -1,0 +1,27 @@
+{
+  "name": "11-tts",
+  "module": "index.ts",
+  "type": "module",
+  "scripts": {
+    "build": "esbuild index.ts --bundle --platform=node --outfile=11-tts-out.js"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "commander": "^13.1.0",
+    "elevenlabs": "^1.52.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@types/node": "^22.13.5",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.7.3"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@biomejs/biome",
+      "esbuild"
+    ]
+  }
+}
