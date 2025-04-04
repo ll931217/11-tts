@@ -2,9 +2,9 @@ name: Build CLI
 
 on:
   push:
-    branches: [master, main]
-    # tags:
-    #   - "v*.*.*"
+    # branches: [master, main]
+    tags:
+      - "v*.*.*"
 
 jobs:
   build:
