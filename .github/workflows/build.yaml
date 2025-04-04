@@ -34,7 +34,7 @@ jobs:
           cd -
 
       - name: Build CLI
-        run: make build
+        run: make build-ci
 
       - name: Release
         uses: softprops/action-gh-release@v2
