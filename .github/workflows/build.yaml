@@ -38,8 +38,13 @@ jobs:
       - name: Build CLI
         run: make build-ci
 
+      - uses: actions/upload-artifact@v4
+        with:
+          name: 11-tts
+          path: 11-tts
+
       - name: Release
         uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/')
+        # if: startsWith(github.ref, 'refs/tags/')
         with:
           files: 11-tts
