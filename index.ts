@@ -25,7 +25,7 @@ function getConfig() {
 }
 
 // Save config
-function saveConfig(config: Record<string, any>) {
+function saveConfig(config: Record<string, string>) {
   fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2));
 }
 
@@ -280,8 +280,8 @@ async function playAudio(audioPath: string) {
       console.log("Audio playback started");
       return true;
     }
-  } catch (error: any) {
-    console.error(`Error playing audio: ${error.message}`);
+  } catch (error: unknown) {
+    console.error(`Error playing audio: ${(error as Error).message}`);
     console.log("Try installing an audio player like mpv, mplayer, or aplay.");
     return false;
   }
