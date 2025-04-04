@@ -48,3 +48,4 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: 11-tts
+          token: ${{ secrets.PAT_RELEASE }}
