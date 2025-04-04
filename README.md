@@ -23,6 +23,8 @@ drwxr-xr-x - ll931217  4 Apr 10:37  11-tts
 drwxr-xr-x - ll931217 29 Oct  2024  node-v22.11.0-linux-x64
 ```
 
+Then inside the `11-tts` directory, run the following commands
+
 ```bash
 export ELEVENLABS_API_KEY=<your_api_key>
 pnpm i

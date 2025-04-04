@@ -12,8 +12,8 @@ vi.mock("node:util", () => ({
 import { exec } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-import { commandExists, getConfig } from ".";
 import { promisify } from "node:util";
+import { commandExists, getConfig } from "../utils/common";
 
 describe("Config Management", () => {
   const mockConfig = { apiKey: "test-api-key" };

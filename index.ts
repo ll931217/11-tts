@@ -1,54 +1,18 @@
-#!/usr/bin/env node
-
 import fs from "node:fs";
-import { exec, spawn } from "node:child_process";
-import path from "node:path";
 import os from "node:os";
-import { promisify } from "node:util";
+import path from "node:path";
 
-import { ElevenLabsClient } from "elevenlabs";
 import { program } from "commander";
 
-import type { ConfigType } from "./types";
-
-const CONFIG_PATH = path.join(os.homedir(), ".config/elevenlabs-config.json");
-const DEFAULT_VOICE_ID = "56AoDkrOh6qfVPDXZ7Pt";
-const DEFAULT_MODEL_ID = "eleven_turbo_v2_5";
+import { DEFAULT_MODEL_ID, DEFAULT_VOICE_ID } from "./constants";
+import { getConfig, saveConfig } from "./utils/common";
+import { getClient } from "./utils/elevenlabs";
+import { playAudio, sendNotification } from "./utils/notification";
 
 process.on("warning", (warning) => {
   if (warning.name === "ExperimentalWarning") return;
   console.warn(warning.stack);
 });
-
-// Load config if it exists
-export function getConfig(configPath: string = CONFIG_PATH): ConfigType {
-  if (fs.existsSync(configPath)) {
-    return JSON.parse(fs.readFileSync(configPath, "utf-8"));
-  }
-
-  return {
-    apiKey: process.env.ELEVENLABS_API_KEY || "",
-    modelId: DEFAULT_MODEL_ID,
-    voiceId: DEFAULT_VOICE_ID,
-  };
-}
-
-// Save config
-export function saveConfig(config: ConfigType): void {
-  fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2));
-}
-
-// Initialize ElevenLabs client
-export function getClient() {
-  const config = getConfig();
-  if (!config.apiKey) {
-    console.error(
-      "Error: No API key found. Use 'set-key' command to set your API key.",
-    );
-    process.exit(1);
-  }
-  return new ElevenLabsClient({ apiKey: config.apiKey });
-}
 
 // CLI setup
 program
@@ -237,7 +201,10 @@ program
         writeStream.on("error", reject);
       });
 
-      // Play the notification
+      // Send system notification
+      await sendNotification(options.title, text);
+
+      // Play the notification audio
       await playAudio(outputPath);
 
       // Clean up the temporary file
@@ -252,85 +219,5 @@ program
       console.error("Error generating notification:", error);
     }
   });
-
-// Helper function to play audio
-async function playAudio(audioPath: string) {
-  // Determine the command based on the OS
-  let cmd: string;
-  let useSpawn = false;
-  let spawnArgs: string[] = [];
-
-  switch (process.platform) {
-    case "darwin": // macOS
-      cmd = `afplay "${audioPath}"`;
-      // For macOS, we can use spawn for better control
-      useSpawn = true;
-      spawnArgs = ["afplay", audioPath];
-      break;
-    case "win32": // Windows
-      // For Windows, we'll use a non-blocking approach
-      cmd = `start "" "${audioPath}"`;
-      break;
-    case "linux": // Linux
-      // Try multiple players in order of preference
-      if (await commandExists("mpv")) {
-        cmd = `mpv --no-terminal "${audioPath}" &`;
-        useSpawn = true;
-        spawnArgs = ["mpv", "--no-terminal", audioPath];
-      } else if (await commandExists("mplayer")) {
-        cmd = `mplayer -really-quiet "${audioPath}" &`;
-        useSpawn = true;
-        spawnArgs = ["mplayer", "-really-quiet", audioPath];
-      } else if (await commandExists("aplay")) {
-        cmd = `aplay "${audioPath}" &`;
-        useSpawn = true;
-        spawnArgs = ["aplay", audioPath];
-      } else if (await commandExists("paplay")) {
-        cmd = `paplay "${audioPath}" &`;
-        useSpawn = true;
-        spawnArgs = ["paplay", audioPath];
-      } else {
-        cmd = `xdg-open "${audioPath}"`;
-        useSpawn = true;
-        spawnArgs = ["xdg-open", audioPath];
-      }
-      break;
-    default: // Other platforms
-      cmd = `xdg-open "${audioPath}"`;
-      useSpawn = true;
-      spawnArgs = ["xdg-open", audioPath];
-  }
-
-  try {
-    if (useSpawn) {
-      // Use spawn for non-blocking execution
-      const player = spawn(spawnArgs[0], spawnArgs.slice(1), {
-        detached: true,
-        stdio: "ignore",
-      });
-
-      // Unref the child process so it can run independently
-      player.unref();
-
-      console.log("Audio playback started");
-      return true;
-    }
-  } catch (error: unknown) {
-    console.error(`Error playing audio: ${(error as Error).message}`);
-    console.log("Try installing an audio player like mpv, mplayer, or aplay.");
-    return false;
-  }
-}
-
-// Helper function to check if a command exists
-export async function commandExists(command: string) {
-  try {
-    const execPromise = promisify(exec);
-    await execPromise(`which ${command}`);
-    return true;
-  } catch (error) {
-    return false;
-  }
-}
 
 export { program };
