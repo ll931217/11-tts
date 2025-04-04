@@ -3,7 +3,10 @@
   "module": "index.ts",
   "type": "module",
   "scripts": {
-    "build": "esbuild index.ts --bundle --platform=node --outfile=11-tts-out.js"
+    "build": "esbuild index.ts --bundle --platform=node --outfile=11-tts-out.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
@@ -15,8 +18,10 @@
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@types/node": "^22.13.5",
+    "@vitest/coverage-v8": "^1.4.0",
     "esbuild": "^0.25.0",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "vitest": "^1.4.0"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
