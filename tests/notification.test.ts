@@ -1,6 +1,5 @@
 import {
   afterEach,
-  beforeAll,
   beforeEach,
   describe,
   expect,
@@ -31,14 +30,10 @@ describe("sendNotification", () => {
   const originalPlatform = process.platform;
   const mockedSpawn: MockedFunction<typeof spawn> = vi.mocked(spawn);
   const mockedExec: MockedFunction<typeof exec> = vi.mocked(exec);
-  const mockedCommandExists = vi.mocked(commonUtils.commandExists);
-
-  beforeAll(() => {
-    mockedCommandExists.mockResolvedValue(true);
-  });
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(commonUtils.commandExists).mockResolvedValue(true);
     // Mock exec to simulate command exists
     mockedExec.mockImplementation((_cmd, _opts, callback) => {
       if (callback) {
@@ -70,62 +65,56 @@ describe("sendNotification", () => {
     );
   });
 
-  // it("should send notification on Windows using powershell", async () => {
-  //   Object.defineProperty(process, "platform", {
-  //     value: "win32",
-  //   });
-  //
-  //   await sendNotification("Test Title", "Test Message");
-  //
-  //   expect(mockedSpawn).toHaveBeenCalledWith(
-  //     "powershell",
-  //     [
-  //       "-Command",
-  //       expect.stringContaining("[System.Windows.Forms.MessageBox]::Show"),
-  //     ],
-  //     { stdio: "ignore" },
-  //   );
-  // });
-  //
-  // it("should send notification on Linux using notify-send", async () => {
-  //   Object.defineProperty(process, "platform", {
-  //     value: "linux",
-  //   });
-  //
-  //   await sendNotification("Test Title", "Test Message");
-  //
-  //   expect(mockedSpawn).toHaveBeenCalledWith(
-  //     "notify-send",
-  //     ["Test Title", "Test Message"],
-  //     { stdio: "ignore" },
-  //   );
-  // });
-  //
-  // it("should not send notification if command does not exist", async () => {
-  //   Object.defineProperty(process, "platform", {
-  //     value: "linux",
-  //   });
-  //
-  //   // Mock exec to simulate command doesn't exist
-  //   mockedExec.mockImplementation((_cmd, _opts, callback) => {
-  //     if (callback) {
-  //       callback(new Error("command not found"), "", "");
-  //     }
-  //     return {} as ChildProcess;
-  //   });
-  //
-  //   await sendNotification("Test Title", "Test Message");
-  //
-  //   expect(mockedSpawn).not.toHaveBeenCalled();
-  // });
-  //
-  // it("should handle unsupported platforms gracefully", async () => {
-  //   Object.defineProperty(process, "platform", {
-  //     value: "someotherplatform",
-  //   });
-  //
-  //   await sendNotification("Test Title", "Test Message");
-  //
-  //   expect(mockedSpawn).not.toHaveBeenCalled();
-  // });
+  it("should send notification on Windows using powershell", async () => {
+    Object.defineProperty(process, "platform", {
+      value: "win32",
+    });
+
+    await sendNotification("Test Title", "Test Message");
+
+    expect(mockedSpawn).toHaveBeenCalledWith(
+      "powershell",
+      [
+        "-Command",
+        expect.stringContaining("[System.Windows.Forms.MessageBox]::Show"),
+      ],
+      { stdio: "ignore" },
+    );
+  });
+
+  it("should send notification on Linux using notify-send", async () => {
+    Object.defineProperty(process, "platform", {
+      value: "linux",
+    });
+
+    await sendNotification("Test Title", "Test Message");
+
+    expect(mockedSpawn).toHaveBeenCalledWith(
+      "notify-send",
+      ["Test Title", "Test Message"],
+      { stdio: "ignore" },
+    );
+  });
+
+  it("should not send notification if command does not exist", async () => {
+    Object.defineProperty(process, "platform", {
+      value: "linux",
+    });
+
+    vi.mocked(commonUtils.commandExists).mockResolvedValue(false);
+
+    await sendNotification("Test Title", "Test Message");
+
+    expect(mockedSpawn).not.toHaveBeenCalled();
+  });
+
+  it("should handle unsupported platforms gracefully", async () => {
+    Object.defineProperty(process, "platform", {
+      value: "someotherplatform",
+    });
+
+    await sendNotification("Test Title", "Test Message");
+
+    expect(mockedSpawn).not.toHaveBeenCalled();
+  });
 });
