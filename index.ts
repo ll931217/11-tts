@@ -9,7 +9,11 @@ import { promisify } from "node:util";
 import { ElevenLabsClient } from "elevenlabs";
 import { program } from "commander";
 
-const CONFIG_PATH = path.join(os.homedir(), ".elevenlabs-config.json");
+import type { ConfigType } from "./types";
+
+const CONFIG_PATH = path.join(os.homedir(), ".config/elevenlabs-config.json");
+const DEFAULT_VOICE_ID = "56AoDkrOh6qfVPDXZ7Pt";
+const DEFAULT_MODEL_ID = "eleven_turbo_v2_5";
 
 process.on("warning", (warning) => {
   if (warning.name === "ExperimentalWarning") return;
@@ -17,20 +21,25 @@ process.on("warning", (warning) => {
 });
 
 // Load config if it exists
-function getConfig() {
-  if (fs.existsSync(CONFIG_PATH)) {
-    return JSON.parse(fs.readFileSync(CONFIG_PATH, "utf-8"));
+export function getConfig(configPath: string = CONFIG_PATH): ConfigType {
+  if (fs.existsSync(configPath)) {
+    return JSON.parse(fs.readFileSync(configPath, "utf-8"));
   }
-  return { apiKey: process.env.ELEVENLABS_API_KEY || "" };
+
+  return {
+    apiKey: process.env.ELEVENLABS_API_KEY || "",
+    modelId: DEFAULT_MODEL_ID,
+    voiceId: DEFAULT_VOICE_ID,
+  };
 }
 
 // Save config
-function saveConfig(config: Record<string, string>) {
+export function saveConfig(config: ConfigType): void {
   fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2));
 }
 
 // Initialize ElevenLabs client
-function getClient() {
+export function getClient() {
   const config = getConfig();
   if (!config.apiKey) {
     console.error(
@@ -52,9 +61,27 @@ program
   .command("set-key")
   .description("Set your ElevenLabs API key")
   .argument("<api-key>", "Your ElevenLabs API key")
-  .action((apiKey) => {
+  .action((apiKey: string) => {
     saveConfig({ ...getConfig(), apiKey });
     console.log("API key saved successfully!");
+  });
+
+program
+  .command("set-voice")
+  .description("Set voice ID")
+  .argument("<voice-id>", "Your chosen ElevenLabs Voice ID")
+  .action((voiceId: string) => {
+    saveConfig({ ...getConfig(), voiceId });
+    console.log("Voice ID saved successfully!");
+  });
+
+program
+  .command("set-model")
+  .description("Set model ID")
+  .argument("<model-id>", "Your chosen ElevenLabs Model ID")
+  .action((modelId: string) => {
+    saveConfig({ ...getConfig(), modelId });
+    console.log("Model ID saved successfully!");
   });
 
 // List voices command
@@ -108,8 +135,8 @@ program
   .command("speak")
   .description("Convert text to speech")
   .argument("<text>", "Text to convert to speech")
-  .option("-v, --voice <voice-id>", "Voice ID", "56AoDkrOh6qfVPDXZ7Pt") // Cassidy
-  .option("-m, --model <model-id>", "Model ID", "eleven_turbo_v2_5")
+  .option("-v, --voice <voice-id>", "Voice ID", DEFAULT_VOICE_ID) // Cassidy
+  .option("-m, --model <model-id>", "Model ID", DEFAULT_MODEL_ID)
   .option(
     "-o, --output <filename>",
     "Output file path (default: temporary file)",
@@ -122,9 +149,13 @@ program
 
       console.log("Converting text to speech...");
 
-      const audioResponse = await client.textToSpeech.convert(options.voice, {
+      const config = getConfig();
+      const voiceId = config?.voiceId || options.voice;
+      const modelId = config?.modelId || options.model;
+
+      const audioResponse = await client.textToSpeech.convert(voiceId, {
         text,
-        model_id: options.model,
+        model_id: modelId,
         output_format: options.format,
       });
 
@@ -171,8 +202,8 @@ program
   .command("notify")
   .description("Send a TTS notification")
   .argument("<text>", "Notification text")
-  .option("-v, --voice <voice-id>", "Voice ID", "21m00Tcm4TlvDq8ikWAM") // Rachel voice by default
-  .option("-m, --model <model-id>", "Model ID", "eleven_monolingual_v1")
+  .option("-v, --voice <voice-id>", "Voice ID", DEFAULT_VOICE_ID) // Rachel voice by default
+  .option("-m, --model <model-id>", "Model ID", DEFAULT_MODEL_ID)
   .option("-t, --title <title>", "Notification title", "Notification")
   .action(async (text, options) => {
     try {
@@ -185,10 +216,14 @@ program
         `elevenlabs-notify-${Date.now()}.mp3`,
       );
 
+      const config = getConfig();
+      const voiceId = config?.voiceId || options.voice;
+      const modelId = config?.modelId || options.model;
+
       console.log("Generating notification audio...");
-      const audioResponse = await client.textToSpeech.convert(options.voice, {
+      const audioResponse = await client.textToSpeech.convert(voiceId, {
         text,
-        model_id: options.model,
+        model_id: modelId,
         output_format: "mp3_44100_128",
       });
 
@@ -288,7 +323,7 @@ async function playAudio(audioPath: string) {
 }
 
 // Helper function to check if a command exists
-async function commandExists(command: string) {
+export async function commandExists(command: string) {
   try {
     const execPromise = promisify(exec);
     await execPromise(`which ${command}`);
@@ -298,5 +333,4 @@ async function commandExists(command: string) {
   }
 }
 
-// Parse command line arguments
-program.parse();
+export { program };
