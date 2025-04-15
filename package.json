@@ -3,7 +3,7 @@
   "module": "index.ts",
   "type": "module",
   "scripts": {
-    "build": "esbuild cli.ts --bundle --platform=node --outfile=11-tts-out.js",
+    "build": "esbuild ./src/cli.ts --bundle --platform=node --outfile=11-tts-out.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"
