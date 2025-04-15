@@ -23,8 +23,8 @@ vi.mock("../utils/common", async () => {
 
 import { exec, spawn } from "node:child_process";
 import type { ChildProcess } from "node:child_process";
-import { sendNotification } from "../utils/notification";
-import * as commonUtils from "../utils/common";
+import { sendNotification } from "../src/utils/notification";
+import * as commonUtils from "../src/utils/common";
 
 describe("sendNotification", () => {
   const originalPlatform = process.platform;

@@ -13,7 +13,7 @@ import { exec } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { promisify } from "node:util";
-import { commandExists, getConfig } from "../utils/common";
+import { commandExists, getConfig } from "../src/utils/common";
 
 describe("Config Management", () => {
   const mockConfig = { apiKey: "test-api-key" };
